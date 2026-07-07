@@ -2,8 +2,11 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsLineItem>
+#include <QGraphicsRectItem>
+#include <QGraphicsEllipseItem>
 #include <QColor>
-#include <QDebug>
+#include <QPointF>
 
 class PaintScene : public QGraphicsScene {
     Q_OBJECT
@@ -17,50 +20,26 @@ public:
         Eraser
     };
 
-    PaintScene(QObject* parent = nullptr) : QGraphicsScene(parent) {
-        currentType = Selection;
-        lineColor = Qt::black;
-        fillColor = Qt::white;
-        lineWidth = 2;
-        setSceneRect(0, 0, 800, 600);
-    }
+    PaintScene(QObject* parent = nullptr);
 
-    void setDrawingType(FigureType type) {
-        currentType = type;
-        qDebug() << "Режим изменен:" << type;
-    }
-
-    void setLineColor(QColor color) {
-        lineColor = color;
-        qDebug() << "Цвет линии изменен";
-    }
-
-    void setFillColor(QColor color) {
-        fillColor = color;
-        qDebug() << "Цвет заливки изменен";
-    }
-
-    void setLineWidth(int width) {
-        lineWidth = width;
-        qDebug() << "Толщина линии изменена на:" << width;
-    }
+    void setDrawingType(FigureType type);
+    void setLineColor(QColor color);
+    void setFillColor(QColor color);
+    void setLineWidth(int width);
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
-        QGraphicsScene::mousePressEvent(event);
-    }
-
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override {
-        QGraphicsScene::mouseMoveEvent(event);
-    }
-
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override {
-        QGraphicsScene::mouseReleaseEvent(event);
-    }
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
 private:
     FigureType currentType;
     QColor lineColor;
     QColor fillColor;
     int lineWidth;
+    QPointF startPoint;
+
+    QGraphicsLineItem* tempLine;
+    QGraphicsRectItem* tempRect;
+    QGraphicsEllipseItem* tempEllipse;
 };
