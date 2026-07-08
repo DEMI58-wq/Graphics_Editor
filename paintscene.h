@@ -13,11 +13,11 @@ class PaintScene : public QGraphicsScene {
 
 public:
     enum FigureType {
-        Selection,
-        Line,
-        Rectangle,
-        Ellipse,
-        Eraser
+        Selection = 0,
+        Line = 1,
+        Rectangle = 2,
+        Ellipse = 3,
+        Eraser = 4
     };
 
     PaintScene(QObject* parent = nullptr);
@@ -26,6 +26,10 @@ public:
     void setLineColor(QColor color);
     void setFillColor(QColor color);
     void setLineWidth(int width);
+
+    QColor getLineColor() const { return lineColor; }
+    QColor getFillColor() const { return fillColor; }
+    int getLineWidth() const { return lineWidth; }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

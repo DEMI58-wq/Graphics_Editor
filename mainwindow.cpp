@@ -3,6 +3,9 @@
 #include <QHBoxLayout>
 #include <QColorDialog>
 #include <QInputDialog>
+#include <QFileDialog> 
+#include <QFile>       
+#include <QDataStream> 
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -62,6 +65,8 @@ void MainWindow::initConnections() {
     connect(btnLineColor, &QPushButton::clicked, this, &MainWindow::slotLineColorClicked);
     connect(btnFillColor, &QPushButton::clicked, this, &MainWindow::slotFillColorClicked);
     connect(btnLineWidth, &QPushButton::clicked, this, &MainWindow::slotLineWidthClicked);
+    connect(btnSave, &QPushButton::clicked, this, &MainWindow::slotSaveClicked); 
+    connect(btnLoad, &QPushButton::clicked, this, &MainWindow::slotLoadClicked); 
     connect(btnClear, &QPushButton::clicked, scene, &QGraphicsScene::clear);
 }
 
@@ -85,4 +90,71 @@ void MainWindow::slotLineWidthClicked() {
     bool ok;
     int width = QInputDialog::getInt(this, "Толщина", "Введите толщину:", 2, 1, 20, 1, &ok);
     if (ok) scene->setLineWidth(width);
+}
+
+void MainWindow::slotSaveClicked() {
+    QString fileName = QFileDialog::getSaveFileName(this, "Сохранить проект", "", "Векторный редактор (*.ved)");
+    if (fileName.isEmpty()) return; QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) return;
+
+    QDataStream out(&file);
+    QList<QGraphicsItem*> items = scene->items(Qt::AscendingOrder);
+
+    out << static_cast<int>(items.size());
+
+    for (QGraphicsItem* item : items) {
+        if (auto line = qgraphicsitem_cast<QGraphicsLineItem*>(item)) {
+            out << static_cast<int>(PaintScene::Line);
+            out << line->line() << line->pen().color() << line->pen().width();
+        }
+        else if (auto rect = qgraphicsitem_cast<QGraphicsRectItem*>(item)) {
+            out << static_cast<int>(PaintScene::Rectangle);
+            out << rect->rect() << rect->pen().color() << rect->pen().width() << rect->brush().color();
+        }
+        else if (auto ellipse = qgraphicsitem_cast<QGraphicsEllipseItem*>(item)) {
+            out << static_cast<int>(PaintScene::Ellipse);
+            out << ellipse->rect() << ellipse->pen().color() << ellipse->pen().width() << ellipse->brush().color();
+        }
+    }
+    file.close();
+}
+
+void MainWindow::slotLoadClicked() {
+    QString fileName = QFileDialog::getOpenFileName(this, "Открыть проект", "", "Векторный редактор (*.ved)");
+    if (fileName.isEmpty()) return;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) return;
+
+    QDataStream in(&file);
+    scene->clear();
+
+    int count = 0;
+    in >> count;
+
+    for (int i = 0; i < count; ++i) {
+        int typeInt;
+        in >> typeInt;
+        PaintScene::FigureType type = static_cast<PaintScene::FigureType>(typeInt);
+
+        if (type == PaintScene::Line) {
+            QLineF geom; QColor lColor; int width;
+            in >> geom >> lColor >> width;
+            auto* item = scene->addLine(geom, QPen(lColor, width));
+            item->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+        }
+        else if (type == PaintScene::Rectangle) {
+            QRectF geom; QColor lColor; int width; QColor fColor;
+            in >> geom >> lColor >> width >> fColor;
+            auto* item = scene->addRect(geom, QPen(lColor, width), QBrush(fColor));
+            item->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+        }
+        else if (type == PaintScene::Ellipse) {
+            QRectF geom; QColor lColor; int width; QColor fColor;
+            in >> geom >> lColor >> width >> fColor;
+            auto* item = scene->addEllipse(geom, QPen(lColor, width), QBrush(fColor));
+            item->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+        }
+    }
+    file.close();
 }
