@@ -26,6 +26,16 @@ void PaintScene::setFillColor(QColor color) { fillColor = color; }
 void PaintScene::setLineWidth(int width) { lineWidth = width; }
 
 void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    // ЛОГИКА ЛАСТИКА
+    if (currentType == Eraser) {
+        QGraphicsItem* itemToErase = itemAt(event->scenePos(), QTransform());
+        if (itemToErase) {
+            removeItem(itemToErase);
+            delete itemToErase; // Полностью удаляем из оперативной памяти
+        }
+        return;
+    }
+
     if (currentType == Selection) {
         QGraphicsScene::mousePressEvent(event);
         return;
@@ -62,7 +72,7 @@ void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    if (currentType == Selection) {
+    if (currentType == Selection || currentType == Eraser) {
         QGraphicsScene::mouseMoveEvent(event);
         return;
     }
@@ -89,7 +99,7 @@ void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    if (currentType == Selection) {
+    if (currentType == Selection || currentType == Eraser) {
         QGraphicsScene::mouseReleaseEvent(event);
         return;
     }

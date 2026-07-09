@@ -3,9 +3,10 @@
 #include <QHBoxLayout>
 #include <QColorDialog>
 #include <QInputDialog>
-#include <QFileDialog> 
-#include <QFile>       
-#include <QDataStream> 
+#include <QFileDialog>
+#include <QFile>
+#include <QDataStream>
+#include <QMessageBox> 
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -65,8 +66,8 @@ void MainWindow::initConnections() {
     connect(btnLineColor, &QPushButton::clicked, this, &MainWindow::slotLineColorClicked);
     connect(btnFillColor, &QPushButton::clicked, this, &MainWindow::slotFillColorClicked);
     connect(btnLineWidth, &QPushButton::clicked, this, &MainWindow::slotLineWidthClicked);
-    connect(btnSave, &QPushButton::clicked, this, &MainWindow::slotSaveClicked); 
-    connect(btnLoad, &QPushButton::clicked, this, &MainWindow::slotLoadClicked); 
+    connect(btnSave, &QPushButton::clicked, this, &MainWindow::slotSaveClicked);
+    connect(btnLoad, &QPushButton::clicked, this, &MainWindow::slotLoadClicked);
     connect(btnClear, &QPushButton::clicked, scene, &QGraphicsScene::clear);
 }
 
@@ -94,8 +95,13 @@ void MainWindow::slotLineWidthClicked() {
 
 void MainWindow::slotSaveClicked() {
     QString fileName = QFileDialog::getSaveFileName(this, "Сохранить проект", "", "Векторный редактор (*.ved)");
-    if (fileName.isEmpty()) return; QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) return;
+    if (fileName.isEmpty()) return;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось открыть файл для записи.");
+        return;
+    }
 
     QDataStream out(&file);
     QList<QGraphicsItem*> items = scene->items(Qt::AscendingOrder);
@@ -117,6 +123,7 @@ void MainWindow::slotSaveClicked() {
         }
     }
     file.close();
+    QMessageBox::information(this, "Успех", "Проект успешно сохранен в файл!");
 }
 
 void MainWindow::slotLoadClicked() {
@@ -124,7 +131,10 @@ void MainWindow::slotLoadClicked() {
     if (fileName.isEmpty()) return;
 
     QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly)) return;
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось открыть файл для чтения.");
+        return;
+    }
 
     QDataStream in(&file);
     scene->clear();
@@ -157,4 +167,5 @@ void MainWindow::slotLoadClicked() {
         }
     }
     file.close();
+    QMessageBox::information(this, "Успех", "Проект успешно загружен!");
 }

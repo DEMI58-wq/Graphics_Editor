@@ -23,8 +23,8 @@ private slots:
     void slotLineColorClicked();
     void slotFillColorClicked();
     void slotLineWidthClicked();
-    void slotSaveClicked();   
-    void slotLoadClicked();   
+    void slotSaveClicked();
+    void slotLoadClicked();
 
 private:
     void initUI();
